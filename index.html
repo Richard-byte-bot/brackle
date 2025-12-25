@@ -221,12 +221,45 @@
         --cell: 40px;
         --gap: 7px;
       }
-      .kbd button{
-        padding: 12px 16px;
-        font-size: 16px;
-        min-width: 64px;
+
+      /* ✅ 括号键盘：3 等分一行，"高度视图"独占一行 */
+      .kbd{
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      #toggleView{
+        grid-column: 1 / -1;
+      }
+
+      /* ✅ 底部按钮：新题/提交 等分宽度 */
+      .bar{
+        width: 100%;
+      }
+      .bar button{
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* ✅ 统一“键盘 + 底部按钮”的大小 */
+      .kbd button,
+      .bar button{
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        font-size: 15px;
+        padding: 0 14px;
+        border-radius: 14px;
+        line-height: 1;
+      }
+
+      /* ✅ 让底部按钮也有一点点阴影（可选） */
+      .bar button{
+        box-shadow: 0 1px 0 rgba(0,0,0,.06);
       }
     }
+
   </style>
 </head>
 
