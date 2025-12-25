@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brackle</title>
+  <style>
+    :root{
+      --cols: 10;
+      --cell: 46px;
+      --gap: 8px;
+      --radius: 10px;
+      --border: #d6d6d6;
+      --text: #111;
+      --muted: #666;
+      --bg: #ffffff;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* 只左右居中，上下靠上 */
+      background: #fafafa;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans SC", Arial, sans-serif;
+      padding: 22px;
+    }
+
+    .app{
+      width: min(680px, 96vw);
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+    }
+
+    .app:focus { outline: none; }
+
+    .top{
+      width: 100%;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: .2px;
+    }
+
+    .sub{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .legend{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .dot{
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      display: inline-block;
+      vertical-align: -2px;
+      border: 1px solid rgba(0,0,0,.12);
+      margin-right: 6px;
+    }
+    .dot.g{ background:#3cb371; }
+    .dot.y{ background:#f2c94c; }
+    .dot.x{ background:#9e9e9e; }
+
+    .bar{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button{
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      background: #111;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:disabled{
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .ghost{
+      background: #efefef;
+      color: #111;
+    }
+
+    .msg{
+      width: 100%;
+      min-height: 22px;
+      text-align: center;
+      font-size: 13px;
+      color: #b00020;
+    }
+    .msg.ok{ color: #176b2c; }
+
+    .board{
+      width: 100%;
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .row{
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      gap: var(--gap);
+    }
+
+    .cell{
+      width: var(--cell);
+      height: var(--cell);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    /* 当前输入行的“光标”效果 */
+    .cell.cursor{
+      border-color: #7a7a7a;
+      box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+    }
+
+    /* 揭示颜色 */
+    .cell.g{ background:#3cb371; border-color:#2b8b55; color:#fff; }
+    .cell.y{ background:#f2c94c; border-color:#d0a736; color:#111; }
+    .cell.x{ background:#9e9e9e; border-color:#7f7f7f; color:#fff; }
+
+    /* 可点击揭示 */
+    .cell.clickable{ cursor: pointer; }
+    .cell.clickable:hover{ border-color: #9a9a9a; }
+
+    /* ✅ 等待揭示时：把下面未解锁的行整体“变灰”引导 */
+    .row.dim .cell{
+      background: #f2f2f2;
+      border-color: #e0e0e0;
+      color: rgba(0,0,0,.25);
+    }
+    .row.dim .cell.cursor{
+      box-shadow: none;
+      border-color: #e0e0e0;
+    }
+    .row.dim .cell.clickable{
+      cursor: default;
+    }
+
+    /* 下方工具区（虚拟键盘 + 视图切换同一行） */
+    .tools{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      user-select: none;
+    }
+
+    .kbd{
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .kbd button{
+      background: #efefef;
+      color: #111;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 400; /* 不加粗 */
+      box-shadow: 0 1px 0 rgba(0,0,0,.06);
+    }
+
+    .kbd button:active{
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 520px){
+      :root{
+        --cell: 40px;
+        --gap: 7px;
+      }
+      .kbd button{
+        padding: 12px 16px;
+        font-size: 16px;
+        min-width: 64px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app" id="app" tabindex="0" aria-label="Brackle">
+    <header class="top">
+      <h1>BRACKLE</h1>
+      <p class="sub">
+        据说，你在句子结尾喜欢加括号？
+      </p>
+      <div class="legend" aria-label="提示说明">
+        <span><i class="dot g"></i>diff=0</span>
+        <span><i class="dot y"></i>diff≤2</span>
+        <span><i class="dot x"></i>diff&gt;2</span>
+      </div>
+    </header>
+
+    <div class="bar">
+      <button id="submit">提交</button>
+      <button id="restart" class="ghost" title="重新生成答案">新题</button>
+    </div>
+
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    <section id="board" class="board" aria-label="棋盘"></section>
+
+    <div class="tools" aria-label="键盘与视图">
+      <div class="kbd" aria-label="括号键盘">
+        <button id="keyL" type="button">(</button>
+        <button id="keyR" type="button">)</button>
+        <button id="keyBk" type="button">后退</button>
+        <button id="toggleView" type="button" class="ghost" title="快捷键：B">高度视图</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+(() => {
+  const N = 5;
+  const L = 2 * N;        // 10
+  const MAX_TRIES = 6;
+
+  const $app = document.getElementById('app');
+  const $submit = document.getElementById('submit');
+  const $restart = document.getElementById('restart');
+  const $toggleView = document.getElementById('toggleView');
+  const $msg = document.getElementById('msg');
+  const $board = document.getElementById('board');
+
+  const $keyL = document.getElementById('keyL');
+  const $keyR = document.getElementById('keyR');
+  const $keyBk = document.getElementById('keyBk');
+
+  document.documentElement.style.setProperty('--cols', String(L));
+
+  // 生成所有 Dyck words（n=5 => 42）
+  function allDyckWords(n) {
+    const res = [];
+    function dfs(s, open, close) {
+      if (s.length === 2*n) { res.push(s); return; }
+      if (open < n) dfs(s + '(', open + 1, close);
+      if (close < open) dfs(s + ')', open, close + 1);
+    }
+    dfs('', 0, 0);
+    return res;
+  }
+  const DICT = allDyckWords(N);
+
+  function pickRandomAnswer() {
+    return DICT[Math.floor(Math.random() * DICT.length)];
+  }
+
+  function setMsg(text, ok=false) {
+    $msg.textContent = text || '';
+    $msg.className = ok ? 'msg ok' : 'msg';
+  }
+
+  // 合法性检查（Dyck）
+  function isValidDyck(s) {
+    if (s.length !== L) return { ok: false, why: `长度必须为 ${L}。` };
+    if (!/^[()]+$/.test(s)) return { ok: false, why: '仅允许输入 ( 和 )。' };
+    let bal = 0;
+    for (let i = 0; i < s.length; i++) {
+      bal += (s[i] === '(') ? 1 : -1;
+      if (bal < 0) return { ok: false, why: `请检查第 ${i+1} 位的前缀高度。` };
+      if (bal > N) return { ok: false, why: `请检查第 ${i+1} 位的前缀高度。` };
+    }
+    if (bal !== 0) return { ok: false, why: '左右括号总数不相等。' };
+    return { ok: true, why: '' };
+  }
+
+  // 前缀高度数组
+  function balances(s) {
+    const b = [];
+    let bal = 0;
+    for (let i = 0; i < s.length; i++) {
+      bal += (s[i] === '(') ? 1 : -1;
+      b.push(bal);
+    }
+    return b;
+  }
+
+  function colorClassForDiff(diff) {
+    if (diff === 0) return 'g';
+    if (diff <= 2) return 'y';
+    return 'x';
+  }
+
+  // 游戏状态
+  let answer = '';
+  let ansBal = [];
+  let tries = 0;
+  let done = false;
+  let won = false;
+  let awaitingReveal = false;
+  let activeGuess = '';     // 当前正在输入的这一行
+  let showBalance = false;  // 视图切换：括号 / balance
+
+  // 每回合：guess, gBal, revealedIndex, revealedClass
+  const rounds = [];
+
+  function resetGame() {
+    answer = pickRandomAnswer();
+    ansBal = balances(answer);
+    tries = 0;
+    done = false;
+    won = false;
+    awaitingReveal = false;
+    activeGuess = '';
+
+    rounds.length = 0;
+    setMsg('');
+    render();
+    focusGame();
+  }
+
+  function focusGame() {
+    $app.focus({ preventScroll: true });
+  }
+
+  function toggleBalanceView() {
+    showBalance = !showBalance;
+    $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
+    render();
+    focusGame();
+  }
+
+  // 生成“当前输入行”的显示内容（balance 模式）
+  // 规则：前缀高度 <0 / >N / 或者高度 > 剩余格数（无法在剩余长度内回到0）则显示 '-'
+  function activeRowBalanceDisplay() {
+    const out = Array(L).fill('');
+    let bal = 0;
+    let invalid = false;
+
+    for (let i = 0; i < activeGuess.length; i++) {
+      const ch = activeGuess[i];
+      if (!invalid) {
+        bal += (ch === '(') ? 1 : -1;
+        const remaining = L - (i + 1);
+        if (bal < 0 || bal > N || bal > remaining) invalid = true;
+      }
+      out[i] = invalid ? '-' : String(bal);
+    }
+
+    // “下一格显示 balance”：光标所在格显示当前累计高度（或 '-'）
+    const cursor = activeGuess.length;
+    if (cursor < L) out[cursor] = invalid ? '-' : String(bal);
+
+    return out;
+  }
+
+  function render() {
+    $board.innerHTML = '';
+
+    const activeBalDisp = showBalance ? activeRowBalanceDisplay() : null;
+
+    // ✅ awaitingReveal 时：除了“刚提交的那一行”，其下所有行置灰
+    const revealRowIndex = awaitingReveal ? (rounds.length - 1) : -1;
+
+    for (let r = 0; r < MAX_TRIES; r++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const isSubmitted = r < rounds.length;
+      const isRevealRow = awaitingReveal && (r === revealRowIndex);
+      const isActiveRow = (!done && !awaitingReveal && r === rounds.length);
+
+      // ✅ 需要置灰：正在等待揭示 且 r > revealRowIndex
+      if (awaitingReveal && r > revealRowIndex) {
+        row.classList.add('dim');
+      }
+
+      const guessStr = isSubmitted
+        ? rounds[r].guess
+        : (isActiveRow ? activeGuess : '');
+
+      for (let i = 0; i < L; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        // 内容：括号 or balance
+        if (showBalance) {
+          if (isSubmitted) {
+            cell.textContent = String(rounds[r].gBal[i]);
+          } else if (isActiveRow) {
+            cell.textContent = activeBalDisp[i] || '';
+          } else {
+            cell.textContent = '';
+          }
+        } else {
+          cell.textContent = guessStr[i] || '';
+        }
+
+        // 光标：当前输入位置（仅在可输入行显示）
+        if (isActiveRow && i === activeGuess.length && activeGuess.length < L) {
+          cell.classList.add('cursor');
+        }
+
+        // 颜色揭示：通关后全揭示（失败不揭示）
+        if (isSubmitted) {
+          const rr = rounds[r];
+
+          if (won) {
+            const diff = Math.abs(rr.gBal[i] - ansBal[i]);
+            cell.classList.add(colorClassForDiff(diff));
+          } else {
+            if (rr.revealedIndex === i) cell.classList.add(rr.revealedClass);
+          }
+        }
+
+        // 点击揭示：仅在“等待揭示”的那一行可点（通关后不需要）
+        if (!done && isRevealRow) {
+          cell.classList.add('clickable');
+          cell.title = '点击揭示该位置提示';
+
+          cell.addEventListener('click', () => {
+            if (!awaitingReveal || done) return;
+
+            const rr = rounds[rounds.length - 1];
+            const diff = Math.abs(rr.gBal[i] - ansBal[i]);
+            const cls = colorClassForDiff(diff);
+
+            rr.revealedIndex = i;
+            rr.revealedClass = cls;
+
+            awaitingReveal = false;
+            $submit.disabled = false;
+
+            setMsg(`已揭示第 ${i+1} 位提示：${cls==='g'?'diff=0':cls==='y'?'diff≤2':'diff>2'}。`, true);
+            render();
+            focusGame();
+          });
+        }
+
+        row.appendChild(cell);
+      }
+
+      $board.appendChild(row);
+    }
+
+    $submit.disabled = done || awaitingReveal;
+  }
+
+  function submitGuess() {
+    if (done) return;
+
+    if (awaitingReveal) {
+      setMsg('请先在上一行点击一格以揭示提示。');
+      return;
+    }
+
+    if (tries >= MAX_TRIES) return;
+
+    if (activeGuess.length !== L) {
+      setMsg(`当前行未填满。`);
+      return;
+    }
+
+    const v = isValidDyck(activeGuess);
+    if (!v.ok) {
+      setMsg(`输入不合法：${v.why}`);
+      return;
+    }
+
+    tries++;
+    const rr = {
+      guess: activeGuess,
+      gBal: balances(activeGuess),
+      revealedIndex: null,
+      revealedClass: null
+    };
+    rounds.push(rr);
+
+    if (activeGuess === answer) {
+      done = true;
+      won = true;
+      awaitingReveal = false;
+      setMsg(`完成：第 ${tries} 次命中。`, true);
+      activeGuess = '';
+      render(); // 通关：全揭示颜色（含历史行）
+      focusGame();
+      return;
+    }
+
+    if (tries >= MAX_TRIES) {
+      done = true;
+      won = false;
+      setMsg(`未完成：次数已用尽。答案为 ${answer}。`);
+      activeGuess = '';
+      render();
+      focusGame();
+      return;
+    }
+
+    // 错误：进入揭示阶段；下一行先不让输入，直到揭示完成
+    awaitingReveal = true;
+    activeGuess = '';
+    setMsg('未命中。请在该行点击 1 格揭示提示。');
+    render();
+    focusGame();
+  }
+
+  function pushChar(ch) {
+    if (done || awaitingReveal) return;
+    if (activeGuess.length >= L) return;
+    activeGuess += ch;
+    setMsg('');
+    render();
+    focusGame();
+  }
+
+  function backspace() {
+    if (done || awaitingReveal) return;
+    if (activeGuess.length === 0) return;
+    activeGuess = activeGuess.slice(0, -1);
+    setMsg('');
+    render();
+    focusGame();
+  }
+
+  // 键盘输入（Wordle 风格）
+  function onKeydown(e) {
+    // 视图切换：允许任何状态快速切换（含 awaitingReveal / done）
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'b' || e.key === 'B')) {
+      e.preventDefault();
+      toggleBalanceView();
+      return;
+    }
+
+    if (done) return;
+    if (awaitingReveal) return;
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitGuess();
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      backspace();
+      return;
+    }
+
+    if (e.key === '(' || e.key === ')') {
+      e.preventDefault();
+      pushChar(e.key);
+      return;
+    }
+  }
+
+  // 交互绑定
+  window.addEventListener('keydown', onKeydown);
+  $submit.addEventListener('click', () => { submitGuess(); focusGame(); });
+  $restart.addEventListener('click', () => { resetGame(); });
+  $toggleView.addEventListener('click', () => { toggleBalanceView(); });
+
+  // 虚拟键盘（任意端都显示）
+  $keyL.addEventListener('click', () => pushChar('('));
+  $keyR.addEventListener('click', () => pushChar(')'));
+  $keyBk.addEventListener('click', () => backspace());
+
+  // 点击空白处也能聚焦键盘输入
+  $app.addEventListener('mousedown', () => focusGame());
+
+  resetGame();
+})();
+</script>
+</body>
+</html>
