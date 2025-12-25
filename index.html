@@ -175,6 +175,13 @@
     .cell.clickable{ cursor: pointer; }
     .cell.clickable:hover{ border-color: #9a9a9a; }
 
+    /* ✅ 当前行下方与之无关的行：灰色填充 */
+    .row.future .cell{
+      background: #eeeeee;
+      border-color: #d9d9d9;
+      color: rgba(0,0,0,.18);
+    }
+
     /* 空一行：格子与键盘之间 */
     .spacer{ height: 14px; }
 
@@ -236,7 +243,7 @@
 
     <div class="statusbar" aria-label="统计信息">
       <div id="matchPill" class="pill dim">
-        <span class="k">命中</span>
+        <span class="k">当前命中</span>
         <span class="v" id="matchCount">—</span>
         <span class="k">/</span>
         <span class="v" id="matchTotal">10</span>
@@ -431,6 +438,12 @@
 
       const isSubmitted = r < rounds.length;
       const isActiveRow = (!done && !awaitingReveal && r === rounds.length);
+
+      // ✅ 当前行下方与之无关的行灰掉
+      // 正常输入时：灰 r > rounds.length（当前行下面）
+      // awaitingReveal 时：灰 r >= rounds.length（因为此时没有“正在输入的当前行”）
+      const isFutureRow = (!done) && (awaitingReveal ? (r >= rounds.length) : (r > rounds.length));
+      if (isFutureRow) row.classList.add('future');
 
       const guessStr = isSubmitted
         ? rounds[r].guess
