@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -10,13 +10,28 @@
       --cell: 46px;
       --gap: 8px;
       --radius: 10px;
-      --border: #d6d6d6;
+      --border: #d3d6da;
       --text: #111;
       --muted: #666;
       --bg: #ffffff;
+
+      /* ✅ Wordle-like palette */
+      --green: #6aaa64;
+      --green-dark: #538d4e;
+      --green-soft: #a7caa4;
+      --yellow: #c9b458;
+      --yellow-dark: #b59f3b;
+      --gray: #787c7e;
+      --gray-dark: #565758;
+      --gray-light: #d3d6da;
     }
 
     *{ box-sizing: border-box; }
+
+    /* ✅ iOS: reduce double-tap-to-zoom (keeps pinch zoom) */
+    html, body{ touch-action: manipulation; }
+    button, .cell, .board, .kbdRow1, .bar{ touch-action: manipulation; }
+    button, .cell{ -webkit-tap-highlight-color: transparent; }
 
     body{
       margin: 0;
@@ -92,9 +107,9 @@
       border: 1px solid rgba(0,0,0,.12);
       margin-right: 6px;
     }
-    .dot.g{ background:#3cb371; }
-    .dot.y{ background:#f2c94c; }
-    .dot.x{ background:#9e9e9e; }
+    .dot.g{ background: var(--green); }
+    .dot.y{ background: var(--yellow); }
+    .dot.x{ background: var(--gray); }
 
     .bar{
       width: 100%;
@@ -132,7 +147,7 @@
       color: #b00020;
       margin-top: 20px;
     }
-    .msg.ok{ color: #176b2c; }
+    .msg.ok{ color: var(--green-dark); }
 
     .statusbar{
       width: 100%;
@@ -200,16 +215,16 @@
       box-shadow: 0 0 0 3px rgba(0,0,0,.06);
     }
 
-    .cell.g{ background:#3cb371; border-color:#2b8b55; color:#fff; }
-    .cell.y{ background:#f2c94c; border-color:#d0a736; color:#111; }
-    .cell.x{ background:#9e9e9e; border-color:#7f7f7f; color:#fff; }
+    .cell.g{ background: var(--green); border-color: var(--green-dark); color:#fff; }
+    .cell.y{ background: var(--yellow); border-color: var(--yellow-dark); color:#fff; }
+    .cell.x{ background: var(--gray); border-color: var(--gray-dark); color:#fff; }
 
     .cell.clickable{ cursor: pointer; }
     .cell.clickable:hover{ border-color: #9a9a9a; }
 
     .row.future .cell{
-      background: #eeeeee;
-      border-color: #d9d9d9;
+      background: #f3f3f3;
+      border-color: var(--gray-light);
       color: rgba(0,0,0,.18);
     }
 
@@ -328,6 +343,7 @@
 
     .distTitle{
       font-weight: 800;
+      font-size: 14px;
       text-align: center;
       margin: 8px 0 10px;
       letter-spacing: .4px;
@@ -358,7 +374,7 @@
     .distFill{
       height: 26px;
       border-radius: 6px;
-      background: #9e9e9e;
+      background: var(--gray);
       display: inline-flex;
       align-items: center;
       justify-content: flex-end;
@@ -368,13 +384,14 @@
       font-weight: 800;
     }
     .distFill.zero{
-      background: #bdbdbd;
+      background: var(--gray);
       color: #fff;
       opacity: .9;
-      justify-content: center;
+      /* ✅ 数字位置和其他行一致 */
+      justify-content: flex-end;
     }
-    .distFill.todayWin{ background: #3cb371; }
-    .distFill.todayLose{ background: #7a2f2f; }
+    .distFill.todayWin{ background: var(--green); }
+    .distFill.todayLose{ background: var(--gray-dark); }
 
     .modalBottom{
       display: grid;
@@ -392,6 +409,7 @@
 
     .nextBox .nextLbl{
       font-weight: 800;
+      font-size: 14px;
       letter-spacing: .4px;
       color: #111;
       font-size: 12px;
@@ -404,7 +422,8 @@
     }
 
     .shareBtn{
-      background: #53a653;
+      background: var(--green);
+      font-size: 14px;
       color: #fff;
       border-radius: 14px;
       height: 46px;
@@ -418,7 +437,7 @@
       white-space: nowrap; /* ✅ 能放下就别换行 */
     }
     .shareBtn:disabled{
-      background: #9dc79d;
+      background: var(--green-soft);
       opacity: 1;
     }
 
@@ -477,7 +496,34 @@
       .nextBox{ text-align: center; }
       .shareBtn{ width: 100%; }
     }
-  </style>
+  
+
+  /* ✅ Confetti */
+    #confetti{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 2000;
+      display: none;
+    }
+    .confetti-piece{
+      position: absolute;
+      top: -16px;
+      width: 10px;
+      height: 16px;
+      border-radius: 2px;
+      opacity: .95;
+      will-change: transform;
+      animation-name: confetti-fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+    @keyframes confetti-fall{
+      from{ transform: translate3d(0,0,0) rotate(0deg); }
+      to{ transform: translate3d(var(--dx, 0px), 110vh, 0) rotate(var(--rot, 720deg)); }
+    }
+</style>
 </head>
 
 <body>
@@ -485,18 +531,18 @@
     <header class="top">
       <div class="titlebar">
         <h1>BRACKLE</h1>
-        <button id="openStats" class="iconBtn ghost" type="button" title="统计" aria-label="统计">统计</button>
+        <button id="openStats" class="iconBtn ghost" type="button" title="Stats" aria-label="Stats">Stats</button>
       </div>
-      <div class="legend" aria-label="提示说明">
-        <span><i class="dot g"></i>命中</span>
-        <span><i class="dot y"></i>偏差 1–2</span>
-        <span><i class="dot x"></i>偏差 ≥3</span>
+      <div class="legend" aria-label="Legend">
+        <span><i class="dot g"></i>Hit</span>
+        <span><i class="dot y"></i>Off by 1–2</span>
+        <span><i class="dot x"></i>Off by ≥3</span>
       </div>
     </header>
 
-    <div class="statusbar" aria-label="统计信息">
+    <div class="statusbar" aria-label="Status">
       <div id="matchPill" class="pill dim">
-        <span class="k">当前命中</span>
+        <span class="k">Hits</span>
         <span class="v" id="matchCount">—</span>
         <span class="k">/</span>
         <span class="v" id="matchTotal">10</span>
@@ -505,31 +551,31 @@
 
     <div id="msg" class="msg" role="status" aria-live="polite"></div>
 
-    <section id="board" class="board" aria-label="棋盘"></section>
+    <section id="board" class="board" aria-label="Board"></section>
 
     <div class="spacer" aria-hidden="true"></div>
 
-    <div class="tools" aria-label="键盘">
-      <div class="kbdRow1" aria-label="括号键盘">
+    <div class="tools" aria-label="Keyboard">
+      <div class="kbdRow1" aria-label="Bracket keyboard">
         <button id="keyL" type="button">(</button>
         <button id="keyR" type="button">)</button>
-        <button id="keyBk" type="button">后退</button>
+        <button id="keyBk" type="button">Backspace</button>
       </div>
     </div>
 
     <!-- ✅ 高度视图 + 提交：同一行 -->
     <div class="bar">
-      <button id="toggleView" type="button" class="ghost" title="快捷键：B">高度视图</button>
-      <button id="submit">提交</button>
+      <button id="toggleView" type="button" class="ghost" title="Shortcut: B">Height View</button>
+      <button id="submit">Submit</button>
     </div>
   </main>
 
   <!-- ✅ Statistics Modal -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="统计">
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Statistics">
     <div class="modalCard" id="modalCard">
       <div class="modalTop">
         <div class="modalTitle">STATISTICS</div>
-        <button id="closeModal" class="closeBtn" type="button" aria-label="关闭">×</button>
+        <button id="closeModal" class="closeBtn" type="button" aria-label="Close">×</button>
       </div>
 
       <div class="statsGrid" aria-label="统计数字">
@@ -565,12 +611,19 @@
     </div>
   </div>
 
+  <div id="confetti" aria-hidden="true"></div>
+
 <script>
 (() => {
   const VERSION = 1;
   const N = 5;
   const L = 2 * N;        // 10
   const MAX_TRIES = 6;
+
+  // ✅ End-game modal timing (ms)
+  const END_MODAL_DELAY_WIN = 2100;   // confetti first
+  const END_MODAL_DELAY_LOSE = 1800;  // avoid jumpscare
+  const END_MODAL_DELAY_LOAD = 650;   // refresh/reopen
 
   const LS_STATS_KEY = `brackle_stats_v${VERSION}`;
   const LS_DAY_PREFIX = `brackle_day_v${VERSION}_`;
@@ -605,6 +658,17 @@
   const $sCurStreak = document.getElementById('sCurStreak');
   const $sMaxStreak = document.getElementById('sMaxStreak');
 
+  // ✅ iOS Safari fallback: prevent double-tap zoom (keeps pinch-zoom)
+  (function preventDoubleTapZoom(){
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
+    document.addEventListener('dblclick', (e) => e.preventDefault());
+  })();
+
   function safeLSGet(key) {
     try { return localStorage.getItem(key); } catch { return null; }
   }
@@ -614,9 +678,19 @@
 
   function pad2(n){ return String(n).padStart(2,'0'); }
 
-  function todayKey() {
+  function todayKeyUTC() {
     const d = new Date();
-    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
+    const dd = d.getUTCDate();
+    return `${y}-${pad2(m)}-${pad2(dd)}`;
+  }
+
+  function dateAddDaysUTC(yyyy_mm_dd, delta) {
+    const [y,m,dd] = yyyy_mm_dd.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m-1, dd));
+    dt.setUTCDate(dt.getUTCDate() + delta);
+    return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth()+1)}-${pad2(dt.getUTCDate())}`;
   }
 
   function dateAddDays(yyyy_mm_dd, delta) {
@@ -626,10 +700,10 @@
     return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
   }
 
-  function nextMidnightMs() {
+  function nextMidnightMsUTC() {
     const now = new Date();
-    const nxt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0,0,0,0);
-    return nxt.getTime();
+    const nxt = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0,0,0,0);
+    return nxt;
   }
 
   function formatHHMMSS(ms) {
@@ -651,7 +725,9 @@
     dfs('', 0, 0);
     return res;
   }
-  const DICT = allDyckWords(N);
+  // ✅ 排除过于“默认首猜”的答案
+  const EXCLUDE_ANSWERS = new Set(['()()()()()']);
+  const DICT = allDyckWords(N).filter(w => !EXCLUDE_ANSWERS.has(w));
 
   function hash32(str){
     let h = 0x811c9dc5;
@@ -678,15 +754,15 @@
   }
 
   function isValidDyck(s) {
-    if (s.length !== L) return { ok: false, why: `长度必须为 ${L}。` };
-    if (!/^[()]+$/.test(s)) return { ok: false, why: '仅允许输入 ( 和 )。' };
+    if (s.length !== L) return { ok: false, why: `Length must be ${L}.` };
+    if (!/^[()]+$/.test(s)) return { ok: false, why: 'Only ( and ) are allowed.' };
     let bal = 0;
     for (let i = 0; i < s.length; i++) {
       bal += (s[i] === '(') ? 1 : -1;
-      if (bal < 0) return { ok: false, why: `请检查第 ${i+1} 位的前缀高度。` };
+      if (bal < 0) return { ok: false, why: `Check the prefix height at position ${i+1}.` };
       if (bal > N) return { ok: false, why: `请检查第 ${i+1} 位的前缀高度。` };
     }
-    if (bal !== 0) return { ok: false, why: '左右括号总数不相等。' };
+    if (bal !== 0) return { ok: false, why: 'Total number of ( and ) must match.' };
     return { ok: true, why: '' };
   }
 
@@ -696,9 +772,9 @@
     return 'x';
   }
   function labelForClass(cls) {
-    if (cls === 'g') return '命中';
-    if (cls === 'y') return '偏差 1–2';
-    return '偏差 ≥3';
+    if (cls === 'g') return 'Hit';
+    if (cls === 'y') return 'Off by 1–2';
+    return 'Off by ≥3';
   }
 
   function countMatches(gBal, ansBal) {
@@ -944,8 +1020,13 @@
       fill.className = 'distFill';
 
       let pct = (count / maxVal) * 100;
-      if (count === 0) { fill.classList.add('zero'); pct = 8; }
-      else { pct = Math.max(10, pct); }
+      if (count === 0) {
+        // ✅ 0：保持一个很短的小条（柱形图语义不变），颜色与其他灰条一致
+        fill.classList.add('zero');
+        pct = 0; // 配合 CSS 的 min-width 形成“0 小块”
+      } else {
+        pct = Math.max(10, pct);
+      }
       pct = Math.min(100, pct);
       fill.style.width = pct + '%';
 
@@ -970,7 +1051,7 @@
   function startCountdown() {
     if (countdownTimer) clearInterval(countdownTimer);
     function tick() {
-      const ms = nextMidnightMs() - Date.now();
+      const ms = nextMidnightMsUTC() - Date.now();
       $countdown.textContent = formatHHMMSS(ms);
     }
     tick();
@@ -1000,6 +1081,71 @@
     }
   }
 
+  // ✅ Confetti (win only)
+  const $confetti = document.getElementById('confetti');
+  function launchConfetti(durationMs = 1800) {
+    if (!$confetti) return;
+    $confetti.innerHTML = '';
+    $confetti.style.display = 'block';
+
+    const colors = [
+      getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#6aaa64',
+      getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#c9b458',
+      getComputedStyle(document.documentElement).getPropertyValue('--gray').trim() || '#787c7e',
+      '#b4a7d6', '#66c2a5', '#fc8d62'
+    ];
+
+    const W = window.innerWidth;
+    const count = Math.min(140, Math.max(90, Math.floor(W / 6)));
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+
+      const left = Math.random() * 100;
+      const dx = (Math.random() * 2 - 1) * 140;
+      const rot = 540 + Math.random() * 720;
+      const dur = 1400 + Math.random() * 900;
+      const delay = Math.random() * 200;
+      const w = 8 + Math.random() * 6;
+      const h = 10 + Math.random() * 10;
+
+      p.style.left = left + 'vw';
+      p.style.width = w + 'px';
+      p.style.height = h + 'px';
+      p.style.background = colors[(Math.random() * colors.length) | 0];
+      p.style.setProperty('--dx', dx.toFixed(0) + 'px');
+      p.style.setProperty('--rot', rot.toFixed(0) + 'deg');
+      p.style.animationDuration = dur.toFixed(0) + 'ms';
+      p.style.animationDelay = delay.toFixed(0) + 'ms';
+
+      $confetti.appendChild(p);
+    }
+
+    window.setTimeout(() => {
+      $confetti.style.display = 'none';
+      $confetti.innerHTML = '';
+    }, durationMs);
+  }
+
+  let endModalScheduled = false;
+  function scheduleEndModal(isWin, fromLoad = false) {
+    if (endModalScheduled) return;
+    endModalScheduled = true;
+
+    const delay = fromLoad ? END_MODAL_DELAY_LOAD : (isWin ? END_MODAL_DELAY_WIN : END_MODAL_DELAY_LOSE);
+
+    if (!fromLoad && isWin) {
+      // keep confetti slightly shorter than modal delay
+      launchConfetti(Math.max(1200, delay - 250));
+    }
+
+    window.setTimeout(() => {
+      renderStatsModal();
+      openModal();
+    }, delay);
+  }
+
   function emojiForDiff(diff){
     if (diff === 0) return '🟩';
     if (diff <= 2) return '🟨';
@@ -1007,20 +1153,16 @@
   }
 
   function makeShareText() {
-    const dateStr = today;
+    const dateCompact = today.replace(/-/g, '');
     const result = won ? `${tries}/${MAX_TRIES}` : `X/${MAX_TRIES}`;
-
-    const lines = rounds.map(rr => {
-      let s = '';
-      for (let i = 0; i < L; i++) {
-        const diff = Math.abs(rr.gBal[i] - ansBal[i]);
-        s += emojiForDiff(diff);
-      }
-      return s;
-    });
-
+    const hits = rounds.map(rr => countMatches(rr.gBal, ansBal)).join(' → ');
     const base = `${location.origin}${location.pathname}`.replace(/\/$/, '');
-    return `BRACKLE ${dateStr} ${result}\n\n${lines.join('\n')}\n\n${base}`;
+
+    // ✅ Multi-line (less spoiler-y)
+    return `BRACKLE ${dateCompact} ${result}
+
+${hits}
+@brackle ${base}`;
   }
 
   function updateStatsIfNeeded() {
@@ -1043,7 +1185,7 @@
     if (typeof stats.dist[resultKey] !== 'number') stats.dist[resultKey] = 0;
     stats.dist[resultKey] += 1;
 
-    const yday = dateAddDays(today, -1);
+    const yday = dateAddDaysUTC(today, -1);
     if (won) {
       if (stats.lastPlayedDate === yday && stats.lastResultWasWin === true) stats.currentStreak += 1;
       else stats.currentStreak = 1;
@@ -1062,7 +1204,7 @@
   }
 
   // ========= Game state (today) =========
-  const today = todayKey();
+  const today = todayKeyUTC();
   const answer = dailyAnswer(today);
   const ansBal = balances(answer);
 
@@ -1078,7 +1220,7 @@
   let matchValue = st.matchValue;
   let recorded = st.recorded;
 
-  $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
+  $toggleView.textContent = showBalance ? 'Bracket View' : 'Height View';
 
   function activeRowBalanceDisplay() {
     const out = Array(L).fill('');
@@ -1149,7 +1291,7 @@
           const rr = rounds[r];
           if (!rr.revealed[i]) {
             cell.classList.add('clickable');
-            cell.title = '点击揭示该格提示';
+            cell.title = 'Click to reveal this hint';
             cell.addEventListener('click', () => {
               if (modalOpen) return;
               if (!awaitingReveal || done) return;
@@ -1163,7 +1305,7 @@
               awaitingReveal = false;
               saveDayState();
 
-              setMsg(`已揭示第 ${r+1} 行第 ${i+1} 位：${labelForClass(cls)}。`, true);
+              setMsg(`Revealed row ${r+1}, col ${i+1}: ${labelForClass(cls)}.`, true);
               render();
               focusGame();
             });
@@ -1184,7 +1326,7 @@
   function toggleBalanceView() {
     if (modalOpen) return;
     showBalance = !showBalance;
-    $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
+    $toggleView.textContent = showBalance ? 'Bracket View' : 'Height View';
     saveDayState();
     render();
     focusGame();
@@ -1217,20 +1359,20 @@
     if (done) return;
 
     if (awaitingReveal) {
-      setMsg('请先点击任意已提交格子揭示提示。');
+      setMsg('Reveal a hint first: click any submitted cell.');
       return;
     }
 
     if (tries >= MAX_TRIES) return;
 
     if (activeGuess.length !== L) {
-      setMsg('当前行未填满。');
+      setMsg('Current row is not full.');
       return;
     }
 
     const v = isValidDyck(activeGuess);
     if (!v.ok) {
-      setMsg(`输入不合法：${v.why}`);
+      setMsg(`Invalid input: ${v.why}`);
       return;
     }
 
@@ -1250,14 +1392,13 @@
       activeGuess = '';
       matchValue = L;
       setMatchPill(L);
-      setMsg(`完成：第 ${tries} 次猜中。`, true);
+      setMsg(`Solved in ${tries}.`, true);
 
       saveDayState();
       updateStatsIfNeeded();
       render();
 
-      renderStatsModal();
-      openModal();
+      scheduleEndModal(true);
       return;
     }
 
@@ -1266,20 +1407,19 @@
       won = false;
       awaitingReveal = false;
       activeGuess = '';
-      setMsg(`未完成：次数已用尽。答案为 ${answer}。`);
+      setMsg(`No more tries. Answer: ${answer}。`);
 
       saveDayState();
       updateStatsIfNeeded();
       render();
 
-      renderStatsModal();
-      openModal();
+      scheduleEndModal(false);
       return;
     }
 
     awaitingReveal = true;
     activeGuess = '';
-    setMsg('未命中。请点击任意已提交格子揭示提示。');
+    setMsg('Not solved. Click any submitted cell to reveal a hint.');
 
     saveDayState();
     render();
@@ -1396,8 +1536,8 @@
     initUIFromState();
     if (done) {
       updateStatsIfNeeded();
-      renderStatsModal();
-      openModal();
+      // ✅ no jumpscare on refresh
+      scheduleEndModal(won, true);
     }
   });
 })();
