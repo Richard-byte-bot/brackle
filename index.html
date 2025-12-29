@@ -31,12 +31,11 @@
     }
 
     .app{
-      width: min(680px, 96vw);
+      width: min(680px, 100%);
       display: grid;
       gap: 14px;
       justify-items: center;
     }
-
     .app:focus { outline: none; }
 
     .top{
@@ -47,11 +46,31 @@
       text-align: center;
     }
 
+    .titlebar{
+      width: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     h1{
       margin: 0;
       font-size: 18px;
       font-weight: 750;
       letter-spacing: .2px;
+    }
+
+    .iconBtn{
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
     }
 
     .legend{
@@ -82,7 +101,7 @@
       display: flex;
       justify-content: center;
       gap: 10px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       margin-top: -4px;
     }
 
@@ -111,7 +130,7 @@
       text-align: center;
       font-size: 13px;
       color: #b00020;
-      margin-top: 20px;   /* ← 上面空一行 */
+      margin-top: 20px;
     }
     .msg.ok{ color: #176b2c; }
 
@@ -136,18 +155,31 @@
     .pill .v{ font-weight: 650; }
     .pill.dim{ opacity: .55; }
 
+    /* ✅ 棋盘：正常居中撑满视觉；极窄才滚动（滚动时左对齐） */
     .board{
       width: 100%;
-      display: grid;
-      gap: 10px;
-      justify-content: center;
+      max-width: 100%;
       user-select: none;
+
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable both-edges;
+    }
+    .board.scrolling{
+      align-items: flex-start;
     }
 
     .row{
       display: grid;
       grid-template-columns: repeat(var(--cols), var(--cell));
       gap: var(--gap);
+      width: max-content;
     }
 
     .cell{
@@ -175,34 +207,31 @@
     .cell.clickable{ cursor: pointer; }
     .cell.clickable:hover{ border-color: #9a9a9a; }
 
-    /* ✅ 当前行下方与之无关的行：灰色填充 */
     .row.future .cell{
       background: #eeeeee;
       border-color: #d9d9d9;
       color: rgba(0,0,0,.18);
     }
 
-    /* 空一行：格子与键盘之间 */
     .spacer{ height: 14px; }
 
     .tools{
       width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: grid;
       gap: 10px;
-      flex-wrap: wrap;
+      justify-items: center;
       user-select: none;
     }
 
-    .kbd{
+    .kbdRow1{
+      width: 100%;
       display: flex;
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .kbd button{
+    .kbdRow1 button{
       background: #efefef;
       color: #111;
       border-radius: 14px;
@@ -212,39 +241,207 @@
       box-shadow: 0 1px 0 rgba(0,0,0,.06);
     }
 
-    .kbd button:active{
+    .kbdRow1 button:active{
       transform: translateY(1px);
     }
 
+    /* ✅ Modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      z-index: 999;
+
+      /* ✅ 屏幕不够高时，允许整体滚动 */
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal.hidden{ display: none; }
+
+    .modalCard{
+      width: min(520px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+
+      /* ✅ 屏幕不够高时，卡片内部可滚动 */
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modalTop{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .modalTitle{
+      font-weight: 800;
+      letter-spacing: .5px;
+      font-size: 18px;
+    }
+    .closeBtn{
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: transparent;
+      color: #111;
+      font-size: 22px;
+      line-height: 1;
+      padding: 0;
+    }
+    .closeBtn:hover{ background: #f1f1f1; }
+    /* ✅ 禁用浏览器默认蓝框 */
+    .closeBtn:focus,
+    .closeBtn:focus-visible{
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .statsGrid{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      text-align: center;
+      margin: 8px 0 14px;
+    }
+    .statNum{
+      font-size: 28px;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+    .statLbl{
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .distTitle{
+      font-weight: 800;
+      text-align: center;
+      margin: 8px 0 10px;
+      letter-spacing: .4px;
+    }
+
+    .dist{
+      display: grid;
+      gap: 8px;
+    }
+    .distRow{
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .distKey{
+      text-align: right;
+      font-weight: 700;
+      color: #333;
+    }
+    .distBar{
+      height: 26px;
+      border-radius: 6px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+    }
+    .distFill{
+      height: 26px;
+      border-radius: 6px;
+      background: #9e9e9e;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 10px;
+      min-width: 34px;
+      color: #fff;
+      font-weight: 800;
+    }
+    .distFill.zero{
+      background: #bdbdbd;
+      color: #fff;
+      opacity: .9;
+      justify-content: center;
+    }
+    .distFill.todayWin{ background: #3cb371; }
+    .distFill.todayLose{ background: #7a2f2f; }
+
+    .modalBottom{
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr; /* ✅ 默认：NEXT 左、SHARE 右 */
+      gap: 16px;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .divider{
+      width: 1px;
+      height: 44px;
+      background: rgba(0,0,0,.12);
+      justify-self: center;
+    }
+
+    .nextBox .nextLbl{
+      font-weight: 800;
+      letter-spacing: .4px;
+      color: #111;
+      font-size: 12px;
+    }
+    .nextBox .nextTime{
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      margin-top: 4px;
+    }
+
+    .shareBtn{
+      background: #53a653;
+      color: #fff;
+      border-radius: 14px;
+      height: 46px;
+      font-weight: 850;
+      letter-spacing: .4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0; /* ✅ 不要右边小图标了 */
+      width: 100%;
+      white-space: nowrap; /* ✅ 能放下就别换行 */
+    }
+    .shareBtn:disabled{
+      background: #9dc79d;
+      opacity: 1;
+    }
+
     @media (max-width: 520px){
-      :root{
-        --cell: 40px;
-        --gap: 7px;
+      body{
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: calc(10px + env(safe-area-inset-left));
+        padding-right: calc(10px + env(safe-area-inset-right));
       }
 
-      /* ✅ 括号键盘：3 等分一行，"高度视图"独占一行 */
-      .kbd{
-        width: 100%;
+      :root{ --cell: 36px; --gap: 6px; }
+
+      .cell{
+        font-size: clamp(16px, 4.6vw, 22px);
+      }
+
+      .kbdRow1{
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
-      #toggleView{
-        grid-column: 1 / -1;
-      }
-
-      /* ✅ 底部按钮：新题/提交 等分宽度 */
-      .bar{
-        width: 100%;
-      }
-      .bar button{
-        flex: 1;
-        min-width: 0;
-      }
-
-      /* ✅ 统一“键盘 + 底部按钮”的大小 */
-      .kbd button,
-      .bar button{
+      .kbdRow1 button{
         width: 100%;
         min-width: 0;
         height: 44px;
@@ -254,19 +451,42 @@
         line-height: 1;
       }
 
-      /* ✅ 让底部按钮也有一点点阴影（可选） */
       .bar button{
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        height: 46px;
+        font-size: 15px;
+        border-radius: 14px;
         box-shadow: 0 1px 0 rgba(0,0,0,.06);
       }
+
+      .statsGrid{
+        grid-template-columns: repeat(2, 1fr);
+      }
+      /* ✅ 注意：这里不再强制 modalBottom 变单列（大多数现代手机仍能左右并排） */
+      .nextBox .nextTime{ font-size: 32px; }
     }
 
+    /* ✅ 只有极端窄才换行 + NEXT 居中 */
+    @media (max-width: 360px){
+      .modalBottom{
+        grid-template-columns: 1fr;
+      }
+      .divider{ display: none; }
+      .nextBox{ text-align: center; }
+      .shareBtn{ width: 100%; }
+    }
   </style>
 </head>
 
 <body>
   <main class="app" id="app" tabindex="0" aria-label="Brackle">
     <header class="top">
-      <h1>BRACKLE</h1>
+      <div class="titlebar">
+        <h1>BRACKLE</h1>
+        <button id="openStats" class="iconBtn ghost" type="button" title="统计" aria-label="统计">统计</button>
+      </div>
       <div class="legend" aria-label="提示说明">
         <span><i class="dot g"></i>命中</span>
         <span><i class="dot y"></i>偏差 1–2</span>
@@ -289,30 +509,74 @@
 
     <div class="spacer" aria-hidden="true"></div>
 
-    <div class="tools" aria-label="键盘与视图">
-      <div class="kbd" aria-label="括号键盘">
+    <div class="tools" aria-label="键盘">
+      <div class="kbdRow1" aria-label="括号键盘">
         <button id="keyL" type="button">(</button>
         <button id="keyR" type="button">)</button>
         <button id="keyBk" type="button">后退</button>
-        <button id="toggleView" type="button" class="ghost" title="快捷键：B">高度视图</button>
       </div>
     </div>
 
+    <!-- ✅ 高度视图 + 提交：同一行 -->
     <div class="bar">
-      <button id="restart" class="ghost" title="重新生成答案">新题</button>
+      <button id="toggleView" type="button" class="ghost" title="快捷键：B">高度视图</button>
       <button id="submit">提交</button>
     </div>
   </main>
 
+  <!-- ✅ Statistics Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="统计">
+    <div class="modalCard" id="modalCard">
+      <div class="modalTop">
+        <div class="modalTitle">STATISTICS</div>
+        <button id="closeModal" class="closeBtn" type="button" aria-label="关闭">×</button>
+      </div>
+
+      <div class="statsGrid" aria-label="统计数字">
+        <div>
+          <div class="statNum" id="sPlayed">0</div>
+          <div class="statLbl">Played</div>
+        </div>
+        <div>
+          <div class="statNum" id="sWinPct">0</div>
+          <div class="statLbl">Win %</div>
+        </div>
+        <div>
+          <div class="statNum" id="sCurStreak">0</div>
+          <div class="statLbl">Current Streak</div>
+        </div>
+        <div>
+          <div class="statNum" id="sMaxStreak">0</div>
+          <div class="statLbl">Max Streak</div>
+        </div>
+      </div>
+
+      <div class="distTitle">GUESS DISTRIBUTION</div>
+      <div class="dist" id="dist"></div>
+
+      <div class="modalBottom">
+        <div class="nextBox">
+          <div class="nextLbl">NEXT BRACKLE</div>
+          <div class="nextTime" id="countdown">00:00:00</div>
+        </div>
+        <div class="divider"></div>
+        <button id="shareBtn" class="shareBtn" type="button">SHARE</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
+  const VERSION = 1;
   const N = 5;
   const L = 2 * N;        // 10
   const MAX_TRIES = 6;
 
+  const LS_STATS_KEY = `brackle_stats_v${VERSION}`;
+  const LS_DAY_PREFIX = `brackle_day_v${VERSION}_`;
+
   const $app = document.getElementById('app');
   const $submit = document.getElementById('submit');
-  const $restart = document.getElementById('restart');
   const $toggleView = document.getElementById('toggleView');
   const $msg = document.getElementById('msg');
   const $board = document.getElementById('board');
@@ -325,8 +589,57 @@
   const $matchCount = document.getElementById('matchCount');
   const $matchTotal = document.getElementById('matchTotal');
   $matchTotal.textContent = String(L);
-
   document.documentElement.style.setProperty('--cols', String(L));
+
+  // modal
+  const $modal = document.getElementById('modal');
+  const $modalCard = document.getElementById('modalCard');
+  const $closeModal = document.getElementById('closeModal');
+  const $openStats = document.getElementById('openStats');
+  const $shareBtn = document.getElementById('shareBtn');
+  const $countdown = document.getElementById('countdown');
+  const $dist = document.getElementById('dist');
+
+  const $sPlayed = document.getElementById('sPlayed');
+  const $sWinPct = document.getElementById('sWinPct');
+  const $sCurStreak = document.getElementById('sCurStreak');
+  const $sMaxStreak = document.getElementById('sMaxStreak');
+
+  function safeLSGet(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+  function safeLSSet(key, val) {
+    try { localStorage.setItem(key, val); } catch {}
+  }
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  }
+
+  function dateAddDays(yyyy_mm_dd, delta) {
+    const [y,m,dd] = yyyy_mm_dd.split('-').map(Number);
+    const dt = new Date(y, m-1, dd);
+    dt.setDate(dt.getDate() + delta);
+    return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+  }
+
+  function nextMidnightMs() {
+    const now = new Date();
+    const nxt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0,0,0,0);
+    return nxt.getTime();
+  }
+
+  function formatHHMMSS(ms) {
+    if (ms <= 0) return '00:00:00';
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  }
 
   function allDyckWords(n) {
     const res = [];
@@ -340,13 +653,28 @@
   }
   const DICT = allDyckWords(N);
 
-  function pickRandomAnswer() {
-    return DICT[Math.floor(Math.random() * DICT.length)];
+  function hash32(str){
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return (h >>> 0);
   }
 
-  function setMsg(text, ok=false) {
-    $msg.textContent = text || '';
-    $msg.className = ok ? 'msg ok' : 'msg';
+  function dailyAnswer(dateStr){
+    const idx = hash32('BRACKLE|' + dateStr) % DICT.length;
+    return DICT[idx];
+  }
+
+  function balances(s) {
+    const b = [];
+    let bal = 0;
+    for (let i = 0; i < s.length; i++) {
+      bal += (s[i] === '(') ? 1 : -1;
+      b.push(bal);
+    }
+    return b;
   }
 
   function isValidDyck(s) {
@@ -362,22 +690,11 @@
     return { ok: true, why: '' };
   }
 
-  function balances(s) {
-    const b = [];
-    let bal = 0;
-    for (let i = 0; i < s.length; i++) {
-      bal += (s[i] === '(') ? 1 : -1;
-      b.push(bal);
-    }
-    return b;
-  }
-
   function colorClassForDiff(diff) {
-    if (diff === 0) return 'g';     // 命中
-    if (diff <= 2) return 'y';      // 偏差 1–2
-    return 'x';                     // 偏差 ≥3
+    if (diff === 0) return 'g';
+    if (diff <= 2) return 'y';
+    return 'x';
   }
-
   function labelForClass(cls) {
     if (cls === 'g') return '命中';
     if (cls === 'y') return '偏差 1–2';
@@ -390,6 +707,11 @@
     return c;
   }
 
+  function setMsg(text, ok=false) {
+    $msg.textContent = text || '';
+    $msg.className = ok ? 'msg ok' : 'msg';
+  }
+
   function setMatchPill(valueOrNull) {
     if (valueOrNull === null) {
       $matchCount.textContent = '—';
@@ -400,44 +722,363 @@
     $matchPill.classList.remove('dim');
   }
 
-  let answer = '';
-  let ansBal = [];
-  let tries = 0;
-  let done = false;
-  let won = false;
-  let awaitingReveal = false;
-  let activeGuess = '';
-  let showBalance = false;
-
-  // rounds[r] = { guess, gBal, revealed: Array(L).fill(null or 'g'/'y'/'x') }
-  const rounds = [];
-
-  function resetGame() {
-    answer = pickRandomAnswer();
-    ansBal = balances(answer);
-    tries = 0;
-    done = false;
-    won = false;
-    awaitingReveal = false;
-    activeGuess = '';
-    rounds.length = 0;
-
-    setMsg('');
-    setMatchPill(null);
-    render();
-    focusGame();
-  }
-
   function focusGame() {
+    if (modalOpen) return;
     $app.focus({ preventScroll: true });
   }
 
-  function toggleBalanceView() {
-    showBalance = !showBalance;
-    $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
-    render();
-    focusGame();
+  // ✅ 自适应：不只手机端，任何宽度不够都缩格子（极窄才滚动）
+  function fitCellsToBoard() {
+    const boardW = $board.clientWidth || 0;
+    if (boardW <= 0) return;
+
+    const usable = Math.max(0, boardW - 2);
+
+    const DEFAULT_CELL = 46;
+    const DEFAULT_GAP = 8;
+    const requiredDefault = L * DEFAULT_CELL + (L - 1) * DEFAULT_GAP;
+
+    // 够宽：保持原样
+    if (requiredDefault <= usable) {
+      document.documentElement.style.setProperty('--cell', DEFAULT_CELL + 'px');
+      document.documentElement.style.setProperty('--gap', DEFAULT_GAP + 'px');
+      return;
+    }
+
+    // 不够：按比例算到“刚好撑满”
+    const MIN_CELL = 26;   // 再窄就让它滚动（因为这里不再继续缩）
+    const MAX_CELL = 44;
+
+    const ratio = 0.07;
+    let cell = usable / (L + (L - 1) * ratio);
+    cell = Math.min(MAX_CELL, cell);
+
+    let gap = cell * ratio;
+    gap = Math.max(2.0, Math.min(7.0, gap));
+
+    cell = (usable - (L - 1) * gap) / L;
+
+    if (cell < MIN_CELL) {
+      cell = MIN_CELL; // ✅ 极端窄：固定最小格子，横向滚动条就会出现
+      // gap 用一个偏小但不挤的值
+      gap = Math.max(2.0, Math.min(6.0, gap));
+    }
+
+    const cellPx = Math.round(cell * 10) / 10;
+    const gapPx = Math.round(gap * 10) / 10;
+
+    document.documentElement.style.setProperty('--cell', cellPx + 'px');
+    document.documentElement.style.setProperty('--gap', gapPx + 'px');
   }
+
+  function updateBoardAlign() {
+    const row = $board.querySelector('.row');
+    if (!row) return;
+    const needScroll = row.scrollWidth > $board.clientWidth + 1;
+    $board.classList.toggle('scrolling', needScroll);
+  }
+
+  // ✅ Global stats
+  function defaultStats() {
+    return {
+      played: 0,
+      wins: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      lastPlayedDate: null,
+      lastResultWasWin: false,
+      dist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"X":0 }
+    };
+  }
+
+  function loadStats() {
+    const raw = safeLSGet(LS_STATS_KEY);
+    if (!raw) return defaultStats();
+    try {
+      const s = JSON.parse(raw);
+      if (!s || typeof s !== 'object') return defaultStats();
+      if (!s.dist) s.dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"X":0 };
+      for (const k of ["1","2","3","4","5","6","X"]) if (typeof s.dist[k] !== 'number') s.dist[k] = 0;
+      for (const k of ["played","wins","currentStreak","maxStreak"]) if (typeof s[k] !== 'number') s[k] = 0;
+      if (typeof s.lastPlayedDate !== 'string') s.lastPlayedDate = null;
+      if (typeof s.lastResultWasWin !== 'boolean') s.lastResultWasWin = false;
+      return s;
+    } catch {
+      return defaultStats();
+    }
+  }
+
+  function saveStats(stats) {
+    safeLSSet(LS_STATS_KEY, JSON.stringify(stats));
+  }
+
+  // ✅ Day state
+  function dayStorageKey(dateStr){ return LS_DAY_PREFIX + dateStr; }
+
+  function defaultDayState(dateStr) {
+    return {
+      date: dateStr,
+      rounds: [],
+      activeGuess: '',
+      awaitingReveal: false,
+      done: false,
+      won: false,
+      tries: 0,
+      showBalance: false,
+      matchValue: null,
+      recorded: false
+    };
+  }
+
+  function loadDayState(dateStr) {
+    const raw = safeLSGet(dayStorageKey(dateStr));
+    if (!raw) return defaultDayState(dateStr);
+    try {
+      const st = JSON.parse(raw);
+      if (!st || st.date !== dateStr) return defaultDayState(dateStr);
+
+      if (!Array.isArray(st.rounds)) st.rounds = [];
+      if (typeof st.activeGuess !== 'string') st.activeGuess = '';
+      if (typeof st.awaitingReveal !== 'boolean') st.awaitingReveal = false;
+      if (typeof st.done !== 'boolean') st.done = false;
+      if (typeof st.won !== 'boolean') st.won = false;
+      if (typeof st.tries !== 'number') st.tries = st.rounds.length;
+      if (typeof st.showBalance !== 'boolean') st.showBalance = false;
+      if (!(typeof st.matchValue === 'number' || st.matchValue === null)) st.matchValue = null;
+      if (typeof st.recorded !== 'boolean') st.recorded = false;
+
+      st.rounds = st.rounds.slice(0, MAX_TRIES).map(r => {
+        const guess = (r && typeof r.guess === 'string') ? r.guess.slice(0, L) : '';
+        const gBal = Array.isArray(r && r.gBal) ? r.gBal.slice(0, L).map(x => Number(x)) : (guess.length === L ? balances(guess) : Array(L).fill(0));
+        const revealed = Array.isArray(r && r.revealed) ? r.revealed.slice(0, L).map(x => (x === 'g' || x === 'y' || x === 'x') ? x : null) : Array(L).fill(null);
+        return { guess, gBal, revealed };
+      });
+
+      st.tries = st.rounds.length;
+      return st;
+    } catch {
+      return defaultDayState(dateStr);
+    }
+  }
+
+  function saveDayState() {
+    const st = {
+      date: today,
+      rounds,
+      activeGuess,
+      awaitingReveal,
+      done,
+      won,
+      tries,
+      showBalance,
+      matchValue,
+      recorded
+    };
+    safeLSSet(dayStorageKey(today), JSON.stringify(st));
+  }
+
+  // ✅ Modal control
+  let modalOpen = false;
+
+  function openModal() {
+    modalOpen = true;
+    $modal.classList.remove('hidden');
+    $shareBtn.disabled = !done;
+    focusModal();
+  }
+
+  function closeModal() {
+    modalOpen = false;
+    $modal.classList.add('hidden');
+    focusGame();
+    render();
+  }
+
+  function focusModal() {
+    $closeModal.focus({ preventScroll: true });
+  }
+
+  function renderStatsModal() {
+    const stats = loadStats();
+
+    const played = stats.played || 0;
+    const wins = stats.wins || 0;
+    const winPct = played === 0 ? 0 : Math.round((wins / played) * 100);
+
+    $sPlayed.textContent = String(played);
+    $sWinPct.textContent = String(winPct);
+    $sCurStreak.textContent = String(stats.currentStreak || 0);
+    $sMaxStreak.textContent = String(stats.maxStreak || 0);
+
+    let todayKeyBar = null;
+    let todayBarClass = null;
+    if (done) {
+      if (won) { todayKeyBar = String(tries); todayBarClass = 'todayWin'; }
+      else { todayKeyBar = 'X'; todayBarClass = 'todayLose'; }
+    }
+
+    const dist = stats.dist || { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"X":0 };
+    const keys = ["1","2","3","4","5","6"];
+    const showX = (dist["X"] || 0) > 0 || todayKeyBar === 'X';
+
+    const maxVal = Math.max(
+      1,
+      ...keys.map(k => dist[k] || 0),
+      showX ? (dist["X"] || 0) : 0
+    );
+
+    $dist.innerHTML = '';
+
+    function addRow(k, count) {
+      const row = document.createElement('div');
+      row.className = 'distRow';
+
+      const key = document.createElement('div');
+      key.className = 'distKey';
+      key.textContent = k;
+
+      const bar = document.createElement('div');
+      bar.className = 'distBar';
+
+      const fill = document.createElement('div');
+      fill.className = 'distFill';
+
+      let pct = (count / maxVal) * 100;
+      if (count === 0) { fill.classList.add('zero'); pct = 8; }
+      else { pct = Math.max(10, pct); }
+      pct = Math.min(100, pct);
+      fill.style.width = pct + '%';
+
+      if (todayKeyBar === k) {
+        fill.classList.add(todayBarClass);
+        fill.classList.remove('zero');
+      }
+
+      fill.textContent = String(count);
+
+      bar.appendChild(fill);
+      row.appendChild(key);
+      row.appendChild(bar);
+      $dist.appendChild(row);
+    }
+
+    for (const k of keys) addRow(k, dist[k] || 0);
+    if (showX) addRow('X', dist['X'] || 0);
+  }
+
+  let countdownTimer = null;
+  function startCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    function tick() {
+      const ms = nextMidnightMs() - Date.now();
+      $countdown.textContent = formatHHMMSS(ms);
+    }
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  function emojiForDiff(diff){
+    if (diff === 0) return '🟩';
+    if (diff <= 2) return '🟨';
+    return '⬛';
+  }
+
+  function makeShareText() {
+    const dateStr = today;
+    const result = won ? `${tries}/${MAX_TRIES}` : `X/${MAX_TRIES}`;
+
+    const lines = rounds.map(rr => {
+      let s = '';
+      for (let i = 0; i < L; i++) {
+        const diff = Math.abs(rr.gBal[i] - ansBal[i]);
+        s += emojiForDiff(diff);
+      }
+      return s;
+    });
+
+    const base = `${location.origin}${location.pathname}`.replace(/\/$/, '');
+    return `BRACKLE ${dateStr} ${result}\n\n${lines.join('\n')}\n\n${base}`;
+  }
+
+  function updateStatsIfNeeded() {
+    if (!done) return;
+    if (recorded) return;
+
+    const stats = loadStats();
+    const resultKey = won ? String(tries) : 'X';
+
+    if (stats.lastPlayedDate === today) {
+      recorded = true;
+      saveDayState();
+      return;
+    }
+
+    stats.played += 1;
+    if (won) stats.wins += 1;
+
+    if (!stats.dist) stats.dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"X":0 };
+    if (typeof stats.dist[resultKey] !== 'number') stats.dist[resultKey] = 0;
+    stats.dist[resultKey] += 1;
+
+    const yday = dateAddDays(today, -1);
+    if (won) {
+      if (stats.lastPlayedDate === yday && stats.lastResultWasWin === true) stats.currentStreak += 1;
+      else stats.currentStreak = 1;
+      stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+      stats.lastResultWasWin = true;
+    } else {
+      stats.currentStreak = 0;
+      stats.lastResultWasWin = false;
+    }
+
+    stats.lastPlayedDate = today;
+    saveStats(stats);
+
+    recorded = true;
+    saveDayState();
+  }
+
+  // ========= Game state (today) =========
+  const today = todayKey();
+  const answer = dailyAnswer(today);
+  const ansBal = balances(answer);
+
+  let st = loadDayState(today);
+
+  let rounds = st.rounds;
+  let activeGuess = st.activeGuess;
+  let awaitingReveal = st.awaitingReveal;
+  let done = st.done;
+  let won = st.won;
+  let tries = st.tries;
+  let showBalance = st.showBalance;
+  let matchValue = st.matchValue;
+  let recorded = st.recorded;
+
+  $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
 
   function activeRowBalanceDisplay() {
     const out = Array(L).fill('');
@@ -472,42 +1113,30 @@
       const isSubmitted = r < rounds.length;
       const isActiveRow = (!done && !awaitingReveal && r === rounds.length);
 
-      // ✅ 当前行下方与之无关的行灰掉
-      // 正常输入时：灰 r > rounds.length（当前行下面）
-      // awaitingReveal 时：灰 r >= rounds.length（因为此时没有“正在输入的当前行”）
       const isFutureRow = (!done) && (awaitingReveal ? (r >= rounds.length) : (r > rounds.length));
       if (isFutureRow) row.classList.add('future');
 
-      const guessStr = isSubmitted
-        ? rounds[r].guess
-        : (isActiveRow ? activeGuess : '');
+      const guessStr = isSubmitted ? rounds[r].guess : (isActiveRow ? activeGuess : '');
 
       for (let i = 0; i < L; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
 
-        // 显示字符/高度
         if (showBalance) {
-          if (isSubmitted) {
-            cell.textContent = String(rounds[r].gBal[i]);
-          } else if (isActiveRow) {
-            cell.textContent = activeBalDisp[i] || '';
-          } else {
-            cell.textContent = '';
-          }
+          if (isSubmitted) cell.textContent = String(rounds[r].gBal[i]);
+          else if (isActiveRow) cell.textContent = activeBalDisp[i] || '';
+          else cell.textContent = '';
         } else {
           cell.textContent = guessStr[i] || '';
         }
 
-        // 光标
         if (isActiveRow && i === activeGuess.length && activeGuess.length < L) {
           cell.classList.add('cursor');
         }
 
-        // 已提交行：显示颜色
         if (isSubmitted) {
           const rr = rounds[r];
-          if (won) {
+          if (done) {
             const diff = Math.abs(rr.gBal[i] - ansBal[i]);
             cell.classList.add(colorClassForDiff(diff));
           } else {
@@ -516,17 +1145,14 @@
           }
         }
 
-        // ✅ awaitingReveal 时：允许点击任意“已提交且该格未揭示”的格子
-        // 已揭示过的格子：完全不加 clickable，也不绑定事件，点了就没反应
-        if (!done && awaitingReveal && isSubmitted && !won) {
+        if (!modalOpen && !done && awaitingReveal && isSubmitted) {
           const rr = rounds[r];
           if (!rr.revealed[i]) {
             cell.classList.add('clickable');
             cell.title = '点击揭示该格提示';
-
             cell.addEventListener('click', () => {
-              if (!awaitingReveal || done || won) return;
-              // 如果这格在点击瞬间已被揭示，就不做任何事
+              if (modalOpen) return;
+              if (!awaitingReveal || done) return;
               if (rr.revealed[i]) return;
 
               const diff = Math.abs(rr.gBal[i] - ansBal[i]);
@@ -535,7 +1161,7 @@
               rr.revealed[i] = cls;
 
               awaitingReveal = false;
-              $submit.disabled = false;
+              saveDayState();
 
               setMsg(`已揭示第 ${r+1} 行第 ${i+1} 位：${labelForClass(cls)}。`, true);
               render();
@@ -550,10 +1176,44 @@
       $board.appendChild(row);
     }
 
-    $submit.disabled = done || awaitingReveal;
+    $submit.disabled = done || awaitingReveal || modalOpen;
+    $toggleView.disabled = modalOpen;
+    requestAnimationFrame(updateBoardAlign);
+  }
+
+  function toggleBalanceView() {
+    if (modalOpen) return;
+    showBalance = !showBalance;
+    $toggleView.textContent = showBalance ? '括号视图' : '高度视图';
+    saveDayState();
+    render();
+    focusGame();
+  }
+
+  function pushChar(ch) {
+    if (modalOpen) return;
+    if (done || awaitingReveal) return;
+    if (activeGuess.length >= L) return;
+    activeGuess += ch;
+    setMsg('');
+    saveDayState();
+    render();
+    focusGame();
+  }
+
+  function backspace() {
+    if (modalOpen) return;
+    if (done || awaitingReveal) return;
+    if (activeGuess.length === 0) return;
+    activeGuess = activeGuess.slice(0, -1);
+    setMsg('');
+    saveDayState();
+    render();
+    focusGame();
   }
 
   function submitGuess() {
+    if (modalOpen) return;
     if (done) return;
 
     if (awaitingReveal) {
@@ -576,65 +1236,59 @@
 
     tries++;
     const gBal = balances(activeGuess);
-    const rr = {
-      guess: activeGuess,
-      gBal,
-      revealed: Array(L).fill(null) // ✅ 每格独立揭示
-    };
+    const rr = { guess: activeGuess, gBal, revealed: Array(L).fill(null) };
     rounds.push(rr);
+
+    const matches = countMatches(gBal, ansBal);
+    matchValue = matches;
+    setMatchPill(matches);
 
     if (activeGuess === answer) {
       done = true;
       won = true;
       awaitingReveal = false;
-      setMsg(`完成：第 ${tries} 次猜中。`, true);
       activeGuess = '';
+      matchValue = L;
       setMatchPill(L);
+      setMsg(`完成：第 ${tries} 次猜中。`, true);
+
+      saveDayState();
+      updateStatsIfNeeded();
       render();
-      focusGame();
+
+      renderStatsModal();
+      openModal();
       return;
     }
-
-    // 错误：更新“命中数量”
-    const matches = countMatches(gBal, ansBal);
-    setMatchPill(matches);
 
     if (tries >= MAX_TRIES) {
       done = true;
       won = false;
-      setMsg(`未完成：次数已用尽。答案为 ${answer}。`);
+      awaitingReveal = false;
       activeGuess = '';
+      setMsg(`未完成：次数已用尽。答案为 ${answer}。`);
+
+      saveDayState();
+      updateStatsIfNeeded();
       render();
-      focusGame();
+
+      renderStatsModal();
+      openModal();
       return;
     }
 
     awaitingReveal = true;
     activeGuess = '';
     setMsg('未命中。请点击任意已提交格子揭示提示。');
-    render();
-    focusGame();
-  }
 
-  function pushChar(ch) {
-    if (done || awaitingReveal) return;
-    if (activeGuess.length >= L) return;
-    activeGuess += ch;
-    setMsg('');
-    render();
-    focusGame();
-  }
-
-  function backspace() {
-    if (done || awaitingReveal) return;
-    if (activeGuess.length === 0) return;
-    activeGuess = activeGuess.slice(0, -1);
-    setMsg('');
+    saveDayState();
     render();
     focusGame();
   }
 
   function onKeydown(e) {
+    if (modalOpen) return;
+
     if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'b' || e.key === 'B')) {
       e.preventDefault();
       toggleBalanceView();
@@ -663,9 +1317,70 @@
     }
   }
 
+  function initUIFromState() {
+    if (done && won) {
+      setMatchPill(L);
+    } else if (typeof matchValue === 'number') {
+      setMatchPill(matchValue);
+    } else if (rounds.length > 0) {
+      const last = rounds[rounds.length - 1];
+      const m = countMatches(last.gBal, ansBal);
+      matchValue = m;
+      setMatchPill(m);
+    } else {
+      setMatchPill(null);
+    }
+
+    if (done) {
+      if (won) setMsg(`完成：第 ${tries} 次猜中。`, true);
+      else setMsg(`未完成：次数已用尽。答案为 ${answer}。`);
+    } else if (awaitingReveal) {
+      setMsg('未命中。请点击任意已提交格子揭示提示。');
+    } else {
+      setMsg('');
+    }
+
+    fitCellsToBoard();
+    render();
+  }
+
+  // ✅ resize / 旋转：重新计算 cell（覆盖“介于电脑和手机之间”的区间）
+  let resizeRAF = null;
+  window.addEventListener('resize', () => {
+    if (resizeRAF) cancelAnimationFrame(resizeRAF);
+    resizeRAF = requestAnimationFrame(() => {
+      fitCellsToBoard();
+      render();
+    });
+  });
+
+  // Modal events
+  $closeModal.addEventListener('click', () => closeModal());
+  $modal.addEventListener('click', (e) => { if (e.target === $modal) closeModal(); });
+  $modalCard.addEventListener('click', (e) => e.stopPropagation());
+
+  $openStats.addEventListener('click', () => {
+    renderStatsModal();
+    openModal();
+  });
+
+  $shareBtn.addEventListener('click', async () => {
+    if (!done) return;
+    const text = makeShareText();
+    const ok = await copyText(text);
+    const old = $shareBtn.textContent;
+    $shareBtn.disabled = true;
+    $shareBtn.textContent = ok ? 'COPIED' : 'FAILED';
+    setTimeout(() => {
+      $shareBtn.textContent = old;
+      $shareBtn.disabled = false;
+      if (modalOpen) focusModal();
+    }, 900);
+  });
+
+  // Game events
   window.addEventListener('keydown', onKeydown);
   $submit.addEventListener('click', () => { submitGuess(); focusGame(); });
-  $restart.addEventListener('click', () => { resetGame(); });
   $toggleView.addEventListener('click', () => { toggleBalanceView(); });
 
   $keyL.addEventListener('click', () => pushChar('('));
@@ -674,7 +1389,17 @@
 
   $app.addEventListener('mousedown', () => focusGame());
 
-  resetGame();
+  // Start
+  startCountdown();
+
+  requestAnimationFrame(() => {
+    initUIFromState();
+    if (done) {
+      updateStatsIfNeeded();
+      renderStatsModal();
+      openModal();
+    }
+  });
 })();
 </script>
 </body>
